@@ -1,54 +1,59 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int MAXN = 30; // Constante para definir o tamanho máximo do grafo 
+vector<int> caminho; //Definindo um vetor para caminho
+vector<bool> visitado; // Vetor para controle das visitas no dfs tipo bool true ou false
 
-vector<int> grafo[MAXN];
-vector<int> caminho; //cria um vetor de inteiro
-bool visitado[MAXN];
 
-bool dfs(int v, int n, int atual)
+// DFS busca em profundidade para encontrar ciclo Hamiltoniano
+bool dfs(int v, int n, int atual, vector<vector<int>> &grafo)
 {
-    if (atual == n)
+    if (atual == n) // Se todos os vértices foram visitados
     {
-        // Verifica se o último vértice é adjacente ao primeiro condição minima necessaria para que haja ciclo hamiltoniano
-        return find(grafo[v].begin(), grafo[v].end(), caminho[0]) != grafo[v].end();
+        // Verifica se o último vértice é adjacente ao primeiro para fechar o ciclo
+        return grafo[v][caminho[0]] == 1;
     }
 
-    for (int u : grafo[v])
+    // Itera sobre todos os vértices para verificar adjacências
+    for (int u = 0; u < grafo.size(); ++u)
     {
-        if (!visitado[u])
+        // Verificar se o vértice u é adjacente ao vértice v e ainda não foi visitado
+        if (grafo[v][u] == 1 && !visitado[u])
         {
-            visitado[u] = true;
-            caminho.push_back(u);
-            if (dfs(u, n, atual + 1))
+            visitado[u] = true; // Marca o vértice u como visitado
+            caminho.push_back(u); // Adiciona o vértice u ao caminho
+            // Continua a busca a partir do vértice u
+            if (dfs(u, n, atual + 1, grafo))
                 return true;
-            visitado[u] = false;
-            caminho.pop_back();
+            visitado[u] = false; // Desmarca o vértice u (backtrack)
+            caminho.pop_back(); // Remove o vértice u do caminho (backtrack)
         }
     }
-    return false;
+    return false; // Se não encontrar um ciclo Hamiltoniano, retorna false
 }
 
-bool temCicloHamiltoniano(vector<vector<int>> &path)
+// Função para verificar se existe um ciclo Hamiltoniano no grafo 
+bool procurarCicloHamiltoniano(vector<vector<int>> &grafo)
 {
-    memset(visitado, false, sizeof(visitado));
-    caminho.clear();
+    fill(visitado.begin(), visitado.end(), false); // Inicializa todos os vértices como não visitados
+    caminho.clear(); // Limpa o caminho
 
-    for (int i = 0; i < path.size(); ++i)
+    int n = grafo.size(); // Número de vértices no grafo
+    for (int i = 0; i < n; ++i)
     {
-        visitado[i] = true;
-        caminho.push_back(i);
-        if (dfs(i, path.size(), 1))
-            return true;
-        visitado[i] = false;
-        caminho.pop_back();
+        visitado[i] = true; // Marca o vértice i como visitado
+        caminho.push_back(i); // Adiciona o vértice i ao caminho
+        // Inicia a busca a partir do vértice i
+        if (dfs(i, n, 1, grafo))
+            return true; // Se encontrar um ciclo Hamiltoniano, retorna true
+        visitado[i] = false; // Desmarca o vértice i para não visitado
+        caminho.pop_back(); // Remove o vértice i do caminho 
     }
-    return false;
+    return false; // Se nenhum ciclo Hamiltoniano for encontrado, retorna false
 }
 
-// Função para imprimir a solução
-void printSolution() {
+// Função para imprimir o ciclo
+void imprimeCiclo() {
     cout << "Ciclo Hamiltoniano encontrado: ";
     for (int i = 0; i < caminho.size(); i++)
         cout << caminho[i] << " ";
@@ -61,8 +66,8 @@ void leituraGrafo(vector<vector<int>> &G, int m)
     while (m--)
     {
         cin >> a >> b;
-        grafo[a].push_back(b);
-        grafo[b].push_back(a);
+        G[a][b] = 1;
+        G[b][a] = 1;
     }
 }
 
@@ -98,10 +103,12 @@ int main()
     cout << "Total Vertices: " << n << endl;
     cout << "Total Arestas: " << m << endl;
 
-    if (temCicloHamiltoniano(Grafo)) {
-        printSolution(); //imprime o ciclo ecncontrado
+    visitado.resize(n); // Redimensiona o vetor visitado para o tamanho do grafo
+
+    if (procurarCicloHamiltoniano(Grafo)) {
+        imprimeCiclo();
     } else {
-        cout << "Nenhum ciclo Hamiltoniano encontrado." << endl;
+        cout << "Nenhum ciclo Hamiltoniano encontrado no grafo fornecido." << endl;
     }
 
     return 0;
